@@ -1,2 +1,4 @@
 fastapi
 uvicorn
+git+https://github.com/openai/whisper.git  # Install Whisper from GitHub
+imageio[ffmpeg]  # Installs the ffmpeg binary using imageio
