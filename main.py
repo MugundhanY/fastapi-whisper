@@ -1,35 +1,24 @@
-from fastapi import FastAPI, File, UploadFile
-from pydantic import BaseModel
-import subprocess
+from fastapi import FastAPI, UploadFile, File
+import whisper
 import os
-import tempfile
 
 app = FastAPI()
 
-class TextResponse(BaseModel):
-    text: str
+# Load the Whisper model (small model to save memory)
+model = whisper.load_model("small")
 
-@app.post("/transcribe", response_model=TextResponse)
-async def transcribe_audio(file: UploadFile = File(...)) -> TextResponse:
-    # Save the uploaded file to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
-        temp_audio_file.write(await file.read())
-        temp_audio_file.close()
-
-        # Define the output path
-        output_file_path = temp_audio_file.name + ".txt"
-
-        # Run the Whisper CLI command
-        result = subprocess.run([
-            'whisper', temp_audio_file.name, '--model', 'small', '--output', output_file_path
-        ], capture_output=True, text=True)
-
-        # Read the output file
-        with open(output_file_path, 'r') as output_file:
-            text = output_file.read()
-
-        # Clean up temporary files
-        os.remove(temp_audio_file.name)
-        os.remove(output_file_path)
-
-    return TextResponse(text=text)
+@app.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    # Save the uploaded file temporarily
+    file_location = f"temp_{file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(await file.read())
+    
+    # Use Whisper to transcribe the audio
+    result = model.transcribe(file_location)
+    
+    # Remove the temporary file
+    os.remove(file_location)
+    
+    # Return the transcription as JSON
+    return {"text": result["text"]}
