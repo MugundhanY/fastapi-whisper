@@ -2,4 +2,5 @@ services:
   - type: web
     name: whisper-cli-fastapi-service
     env: docker
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./Dockerfile
+    plan: free
