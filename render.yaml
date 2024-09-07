@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: whisper-cli-fastapi-service
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      apt-get update && apt-get install -y ffmpeg
+      pip install git+https://github.com/openai/whisper.git 
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
